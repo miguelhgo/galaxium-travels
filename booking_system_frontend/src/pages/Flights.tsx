@@ -7,7 +7,6 @@ import { BookingModal } from '../components/bookings/BookingModal';
 import { getFlights } from '../services/api';
 import { useUser } from '../hooks/useUser';
 import { Search, Filter } from 'lucide-react';
-import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
 
 export const Flights = () => {
@@ -15,6 +14,7 @@ export const Flights = () => {
   const [flights, setFlights] = useState<Flight[]>([]);
   const [filteredFlights, setFilteredFlights] = useState<Flight[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [flightError, setFlightError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFlight, setSelectedFlight] = useState<Flight | null>(null);
   const [showUserModal, setShowUserModal] = useState(false);
@@ -43,12 +43,15 @@ export const Flights = () => {
 
   const loadFlights = async () => {
     setIsLoading(true);
+    setFlightError(null);
     try {
       const data = await getFlights();
       setFlights(data);
       setFilteredFlights(data);
     } catch (error: any) {
-      toast.error('Failed to load flights');
+      const message =
+        error?.details || error?.error || 'Failed to load flights. Please try again.';
+      setFlightError(message);
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -123,10 +126,27 @@ export const Flights = () => {
         </div>
       </motion.div>
 
+      {/* Error banner */}
+      {flightError && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass-card p-6 border border-red-500/40 text-center space-y-4"
+        >
+          <p className="text-red-400 text-lg font-medium">{flightError}</p>
+          <button
+            onClick={loadFlights}
+            className="px-6 py-2 rounded-lg bg-cosmic-gradient text-white font-semibold hover:opacity-90 transition-opacity"
+          >
+            Reintentar
+          </button>
+        </motion.div>
+      )}
+
       {/* Flights Grid */}
       {isLoading ? (
         <LoadingSpinner size="lg" text="Loading flights..." />
-      ) : filteredFlights.length === 0 ? (
+      ) : flightError ? null : filteredFlights.length === 0 ? (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
