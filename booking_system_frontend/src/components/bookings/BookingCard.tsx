@@ -94,7 +94,7 @@ export const BookingCard = ({ booking, flight, onCancel, isCancelling }: Booking
             <div className="flex items-center justify-between pt-3 border-t border-white/10">
               <span className="text-sm text-star-white/60">Price</span>
               <span className="text-lg font-bold text-star-white">
-                {formatCurrency(flight.price)}
+                {formatCurrency(booking.price_paid)}
               </span>
             </div>
           </div>

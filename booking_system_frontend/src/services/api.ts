@@ -16,10 +16,56 @@ const api = axios.create({
   },
 });
 
-// Response interceptor for error handling
+// Retry configuration
+const MAX_RETRIES = 3;
+const INITIAL_RETRY_DELAY = 1000; // 1 second
+
+// Helper function for exponential backoff delay
+const getRetryDelay = (retryCount: number): number => {
+  return INITIAL_RETRY_DELAY * Math.pow(2, retryCount);
+};
+
+// Helper function to check if error is retryable
+const isRetryableError = (error: any): boolean => {
+  // Retry on network errors or 5xx server errors
+  return !error.response || (error.response.status >= 500 && error.response.status < 600);
+};
+
+// Request interceptor to add retry logic
+api.interceptors.request.use(
+  (config) => {
+    // Initialize retry count if not present
+    if (!config.headers['x-retry-count']) {
+      config.headers['x-retry-count'] = '0';
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Response interceptor for error handling with retry logic
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
+    const config = error.config;
+    const retryCount = parseInt(config.headers['x-retry-count'] || '0', 10);
+
+    // Check if we should retry
+    if (retryCount < MAX_RETRIES && isRetryableError(error)) {
+      // Increment retry count
+      config.headers['x-retry-count'] = String(retryCount + 1);
+      
+      // Calculate delay with exponential backoff
+      const delay = getRetryDelay(retryCount);
+      
+      // Wait before retrying
+      await new Promise(resolve => setTimeout(resolve, delay));
+      
+      // Retry the request
+      return api(config);
+    }
+
+    // Max retries reached or non-retryable error
     if (error.response?.data) {
       // Backend returned an error response
       return Promise.reject(error.response.data);

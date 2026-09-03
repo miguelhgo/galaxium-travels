@@ -10,6 +10,8 @@ interface UserIdentificationProps {
   onSuccess: () => void;
 }
 
+
+
 export const UserIdentification = ({ isOpen, onClose, onSuccess }: UserIdentificationProps) => {
   const { setUser } = useUser();
   const [name, setName] = useState('');
@@ -19,7 +21,15 @@ export const UserIdentification = ({ isOpen, onClose, onSuccess }: UserIdentific
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
+// validar que el email tenga un formato válido (p. ej. usuario@dominio.com) antes de continuar
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast.error('Invalid email format');
+      return;
+    }
+
+      
     if (!name.trim() || !email.trim()) {
       toast.error('Please fill in all fields');
       return;

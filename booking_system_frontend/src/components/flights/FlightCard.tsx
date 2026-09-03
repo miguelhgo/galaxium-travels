@@ -10,8 +10,9 @@ interface FlightCardProps {
 }
 
 export const FlightCard = ({ flight, onBook }: FlightCardProps) => {
-  const isLowSeats = flight.seats_available <= 2;
-  const isSoldOut = flight.seats_available === 0;
+  const totalSeats = flight.economy_seats + flight.business_seats + flight.galaxium_seats;
+  const isLowSeats = totalSeats <= 2;
+  const isSoldOut = totalSeats === 0;
 
   return (
     <motion.div
@@ -70,21 +71,40 @@ export const FlightCard = ({ flight, onBook }: FlightCardProps) => {
             </span>
           </div>
 
-          {/* Price */}
+          {/* Price - Starting from Economy */}
           <div className="flex items-center gap-2">
             <DollarSign size={16} className="text-alien-green" />
             <span className="text-2xl font-bold text-star-white">
-              {formatCurrency(flight.price)}
+              {formatCurrency(flight.economy_price)}
             </span>
-            <span className="text-sm text-star-white/60">per seat</span>
+            <span className="text-sm text-star-white/60">starting from</span>
           </div>
 
-          {/* Seats Available */}
-          <div className="flex items-center gap-2">
-            <Users size={16} className={isLowSeats ? 'text-solar-orange' : 'text-star-white/70'} />
-            <span className={`text-sm ${isLowSeats ? 'text-solar-orange font-semibold' : 'text-star-white/70'}`}>
-              {isSoldOut ? 'Sold Out' : `${flight.seats_available} seats available`}
-            </span>
+          {/* Seat Classes Available */}
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <Users size={16} className={isLowSeats ? 'text-solar-orange' : 'text-star-white/70'} />
+              <span className={`text-sm ${isLowSeats ? 'text-solar-orange font-semibold' : 'text-star-white/70'}`}>
+                {isSoldOut ? 'Sold Out' : `${totalSeats} seats available`}
+              </span>
+            </div>
+            <div className="flex gap-2 text-xs">
+              {flight.economy_seats > 0 && (
+                <span className="px-2 py-1 rounded bg-blue-500/20 text-blue-400">
+                  Economy: {flight.economy_seats}
+                </span>
+              )}
+              {flight.business_seats > 0 && (
+                <span className="px-2 py-1 rounded bg-purple-500/20 text-purple-400">
+                  Business: {flight.business_seats}
+                </span>
+              )}
+              {flight.galaxium_seats > 0 && (
+                <span className="px-2 py-1 rounded bg-yellow-500/20 text-yellow-400">
+                  Galaxium: {flight.galaxium_seats}
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
